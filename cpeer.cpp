@@ -116,23 +116,63 @@ void CPeer::iniServerBot()
 void CPeer::iniClientBot()
 {
   int QuerySD = createClientSocket(40000,"192.168.1.4");
-  std::thread(&CPeer::opRead,QuerySD).detach();
-  std::thread(&CPeer::opWrite,QuerySD).detach();
+  std::thread(&CPeer::opRead,this,QuerySD).detach();
+  std::thread(&CPeer::opWrite,this,QuerySD).detach();
 
   int DownloadSD = createClientSocket(40001,"192.168.1.4");
-  std::thread(&CPeer::opRead,DownloadSD).detach();
-  std::thread(&CPeer::opWrite,DownloadSD).detach();
+  std::thread(&CPeer::opRead,this,DownloadSD).detach();
+  std::thread(&CPeer::opWrite,this,DownloadSD).detach();
 
   int KeepAliveSD = createClientSocket(40002,"192.168.1.4");
-  std::thread(&CPeer::opRead,KeepAliveSD).detach();
-  std::thread(&CPeer::opWrite,KeepAliveSD).detach();
+  std::thread(&CPeer::opRead,this,KeepAliveSD).detach();
+  std::thread(&CPeer::opWrite,this,KeepAliveSD).detach();
 
   while(true){}
 }
 
 void CPeer::opRead(int clientSD)
 {
+    string x,y,ptcPlayer,ptcAction;
+    char *protocol;
+    int dynMessageSize;
+    string dySizeStr;
+    int n;
+    protocol = new char[HEADER_SIZE];
 
+    //Reading the next messages sent by the server
+    while(true){
+      n = read(clientSD,protocol,HEADER_SIZE);
+      if (n < 0) perror("ERROR reading from socket");
+      //Which action is going to do
+      ptcAction = protocol[1];
+      printf("Reading protocol: %s", protocol);
+
+      //Verifying which action is going to take place
+      if (ptcAction == ACT_SND_QUERY) {
+        dynMessageSize= QUERY_SIZE;
+        //Retrieve the message
+        delete[] protocol;
+        protocol = new char[dynMessageSize];
+        n = read(clientSD, protocol, dynMessageSize);
+        if (n < 0) perror("ERROR writing to socket");
+        printf("%s\n", protocol);
+
+        dySizeStr =  protocol[0];
+        dySizeStr += protocol[1];
+        dySizeStr += protocol[2];
+        dynMessageSize =  atoi(dySizeStr.c_str());
+
+        delete[] protocol;
+        protocol = new char[dynMessageSize];
+
+         //Retrieve the message
+        n = read(clientSD,protocol,dynMessageSize);
+        if (n < 0) perror("ERROR writing to socket");
+        printf("%s\n", protocol);
+
+      }
+    shutdown(clientSD, SHUT_RDWR);
+    close(clientSD);
 }
 
 void CPeer::opWrite(int clientSD)
