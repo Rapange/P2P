@@ -84,7 +84,7 @@ int CPeer::createClientSocket(int portNumber,std::string serverIP)
   stSockAddr.sin_family = AF_INET;
   stSockAddr.sin_port = htons(portNumber);
 
-  Res = inet_pton(AF_INET, serverIP, &stSockAddr.sin_addr);
+  Res = inet_pton(AF_INET, serverIP.data(), &stSockAddr.sin_addr);
 
   if (0 > Res)
   {
@@ -115,20 +115,19 @@ void CPeer::iniServerBot()
 
 void CPeer::iniClientBot()
 {
-  int QuerySD = createSocket(40000,"192.168.1.4");
-  std::thread(opRead,QuerySD).detach();
-  std::thread(opWrite,QuerySD).detach();
+  int QuerySD = createClientSocket(40000,"192.168.1.4");
+  std::thread(&CPeer::opRead,QuerySD).detach();
+  std::thread(&CPeer::opWrite,QuerySD).detach();
 
-  int DownloadSD = createSocket(40001,"192.168.1.4");
-  std::thread(opRead,DownloadSD).detach();
-  std::thread(opWrite,DownloadSD).detach();
+  int DownloadSD = createClientSocket(40001,"192.168.1.4");
+  std::thread(&CPeer::opRead,DownloadSD).detach();
+  std::thread(&CPeer::opWrite,DownloadSD).detach();
 
-  int KeepAliveSD = createSocket(40002,"192.168.1.4");
-  std::thread(opRead,KeepAliveSD).detach();
-  std::thread(opWrite,KeepAliveSD).detach();
+  int KeepAliveSD = createClientSocket(40002,"192.168.1.4");
+  std::thread(&CPeer::opRead,KeepAliveSD).detach();
+  std::thread(&CPeer::opWrite,KeepAliveSD).detach();
 
   while(true){}
-  return 0;
 }
 
 void CPeer::opRead(int clientSD)

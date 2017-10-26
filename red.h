@@ -14,5 +14,5 @@
 #include <iostream>
 #include <unistd.h>
 #include <chrono>
-
+using namespace std;
 #endif // RED_H_INCLUDED
