@@ -32,6 +32,20 @@ std::string CPeer::formatChunks(std::vector<int> chunks){
   return chunks_formatted;
 }
 
+void CPeer::fillIPs(string ip_list){
+  string ip;
+  for(unsigned int i = 0; i < ip_list.size(); i++){
+    if(ip_list[i] != ','){
+      ip += ip_list[i];
+    }
+    else if(ip_list[i] == ',' || i == ip_list.size()-1){
+      lstPeersIp.push_back(ip);
+      ip = "";
+    }
+  }
+  return;
+}
+
 int CPeer::createServerSocket(int portNumber)
 {
     vector<unsigned int> holder;
@@ -154,6 +168,9 @@ void CPeer::listenForClients(int serverSD, char action)
 
 void CPeer::iniClientBot()
 {
+  int JoinSD = createClientSocket(1100, "127.0.0.1");
+  std::thread(&CPeer::opJoin,this,JoinSD).detach();
+  
   int QuerySD = createClientSocket(40000,"127.0.0.1");
   std::thread(&CPeer::opQuery,this,QuerySD, "hola").detach();
 
@@ -168,23 +185,69 @@ void CPeer::iniClientBot()
   while(true){}
 }
 
+void CPeer::opReadJoin(int clientSD){
+  char* buffer;
+  int ip_list_size;
+  buffer = new char[IP_LIST_SIZE + 1];
+
+  read(clientSD,buffer,IP_LIST_SIZE);
+  buffer[IP_LIST_SIZE] = '\0';
+
+  ip_list_size = stoi(buffer);
+
+  delete[] buffer;
+  buffer = new char[2];
+
+  read(clientSD,buffer,1);
+  buffer[1] = '\0';
+
+  if(buffer[0] == ACT_RCV_JOIN){
+    delete[] buffer;
+    buffer = new char[ip_list_size + 1];
+
+    read(clientSD, buffer, ip_list_size);
+    
+    buffer[ip_list_size] = '\0';
+
+    cout<<"IPs leidas del tracker: "<<buffer<<endl;
+    fillIPs(buffer);
+ 
+  }
+
+  shutdown(clientSD,SHUT_RDWR);
+  close(clientSD);
+}
+
+void CPeer::opWriteJoin(int clientSD){
+  char* buffer;
+  buffer = new char[1];
+  buffer[0] = ACT_SND_JOIN;
+  write(clientSD, buffer, 1);
+  
+}
+
+void CPeer::opJoin(int clientSD){
+  opWriteJoin(clientSD);
+  opReadJoin(clientSD);
+  
+}
 
 void CPeer::opReadQuery(int clientSD, string file_name)
 {
   char* buffer;
   int size_chunk_list, size_file_name;
   
-  buffer = new char[5];
-  read(clientSD, buffer, 4);
-  buffer[4] = '\0';
+  buffer = new char[CHUNK_LIST_SIZE + 1];
+  read(clientSD, buffer, CHUNK_LIST_SIZE);
+  buffer[CHUNK_LIST_SIZE] = '\0';
 
   size_chunk_list = stoi(buffer);
   cout<<"Cliente lee tamanho de lista de chunks del servidor: "<<size_chunk_list<<endl;
   
   delete[] buffer;
-  buffer = new char[1];
+  buffer = new char[ACTION_SIZE];
 
-  read(clientSD, buffer, 1);
+  read(clientSD, buffer, ACTION_SIZE);
   if(buffer[0] == 'q'){
     delete[] buffer;
     buffer = new char[size_chunk_list+1];
@@ -193,10 +256,10 @@ void CPeer::opReadQuery(int clientSD, string file_name)
     buffer[size_chunk_list] = '\0';
 
     delete[] buffer;
-    buffer = new char[4];
-    read(clientSD,buffer,3);
+    buffer = new char[FILE_NAME_SIZE + 1];
+    read(clientSD,buffer,FILE_NAME_SIZE);
 
-    buffer[3] = '\0';
+    buffer[FILE_NAME_SIZE] = '\0';
     size_file_name = stoi(buffer);
 
     delete[] buffer;
@@ -215,7 +278,7 @@ void CPeer::opReadQuery(int clientSD, string file_name)
 void CPeer::opWriteQuery(int clientSD, string file_name)
 {
   char* buffer;
-  string protocol = intToStr(file_name.size(),3);
+  string protocol = intToStr(file_name.size(),FILE_NAME_SIZE);
   protocol += ACT_SND_QUERY;
   protocol += file_name;
 
@@ -267,16 +330,16 @@ void CPeer::opQueryS(int clientSD)
 string CPeer::opReadQueryS(int clientSD){
   char* buffer;
   int size_file_name;
-  buffer = new char[4];
-  read(clientSD,buffer,3);
-  buffer[3] = '\0';
+  buffer = new char[FILE_NAME_SIZE + 1];
+  read(clientSD,buffer,FILE_NAME_SIZE);
+  buffer[FILE_NAME_SIZE] = '\0';
    
   size_file_name = std::stoi(buffer);
   delete[] buffer;
-  buffer = new char[2];
+  buffer = new char[ACTION_SIZE + 1];
 
-  read(clientSD, buffer, 1);
-  buffer[1] = '\0';
+  read(clientSD, buffer, ACTION_SIZE);
+  buffer[ACTION_SIZE] = '\0';
   
   if(buffer[0] == ACT_SND_QUERY){
     delete[] buffer;
@@ -296,10 +359,10 @@ void CPeer::opWriteQueryS(int clientSD, string file_name){
   string protocol;
   char *buffer;
   
-  protocol = intToStr(m_num_chunks[file_name].size(),4);
+  protocol = intToStr(m_num_chunks[file_name].size(),CHUNK_LIST_SIZE);
   protocol += ACT_RCV_QUERY;
   protocol += formatChunks(m_num_chunks[file_name]);
-  protocol += intToStr(file_name.size(),3);
+  protocol += intToStr(file_name.size(),FILE_NAME_SIZE);
   protocol += file_name;
 
   cout<<"Enviando protocolo del servidor: "<<protocol<<endl;

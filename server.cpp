@@ -47,7 +47,7 @@ void Tracker::join(int c_socket, string IP){
   char buffer[2];
   string ip_list, payload;
   int n;
-  IPs.push_back(IP);
+  //IPs.push_back(IP);
   cout<<IPs.size()<<endl;
   n = read(c_socket,buffer,2);
      if (n < 0) perror("ERROR reading from socket");
@@ -62,11 +62,12 @@ void Tracker::join(int c_socket, string IP){
        char j_protocol[payload.size()+1];
        payload.copy(j_protocol,payload.size(),0);
        j_protocol[payload.size()] = '\0';
-	 n = write(c_socket,j_protocol,payload.size()+1);
-       if (n < 0) perror("ERROR writing to socket");
-     }
+       n = write(c_socket,j_protocol,payload.size()+1);
+     if (n < 0) perror("ERROR writing to socket");
+    }
+     IPs.push_back(IP);
      //cout<<IP<<endl;
-
+     
      shutdown(c_socket, SHUT_RDWR);
  
       close(c_socket);

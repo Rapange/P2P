@@ -2,6 +2,12 @@
 #define CPEER_H
 
 #include "red.h"
+#define ACTION_SIZE 1
+#define FILE_NAME_SIZE 3
+#define CHUNK_LIST_SIZE 4
+#define IP_LIST_SIZE 3
+#define ACT_SND_JOIN 'J'
+#define ACT_RCV_JOIN 'j'
 #define ACT_SND_QUERY 'Q' //Receive query Action
 #define ACT_RCV_QUERY 'q' //Send query Action
 
@@ -27,7 +33,8 @@ class CPeer
 
         std::string intToStr(int num, int size);
 	std::string formatChunks(std::vector<int> chunks);
-	  
+	void fillIPs(string ip_list);
+	
         void iniServerBot();
 	void listenForClients(int serverSD, char action);
 	
@@ -35,14 +42,21 @@ class CPeer
         int createClientSocket(int portNumber, string serverIP);
         int createServerSocket(int portNumber);
         
-
+	void opReadJoin(int clientSD);
+	void opWriteJoin(int clientSD);
+	void opJoin(int clientSD);
+	
         void opReadQuery(int clientSD, string file_name);
         void opWriteQuery(int clientSD, string file_name);
 	void opQuery(int clientSD, string file_name);
-        void opReadDownload(int clientSD);
+
+	void opReadDownload(int clientSD);
         void opWriteDownload(int clientSD);
-        void opReadKeep(int clientSD);
+	//void opDownload(int clientSD);
+
+	void opReadKeep(int clientSD);
         void opWriteKeep(int clientSD);
+	void opKeep(int clientSD);
 
 	void opQueryS(int clientSD);
 	string opReadQueryS(int clientSD);
