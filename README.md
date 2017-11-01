@@ -15,4 +15,4 @@ Para el primer main (primer peer) que corran pongan los siguientes puertos:
 
 Para el segundo main que corran coloquen puertos distintos a los tres de arriba, todo esto con el fin para poder probar en su misma laptop el programa (como tienen la misma IP, solo se pueden diferenciar por los puertos y hasta ahora cada peer solo puede comunicarse con el primer peer por el problema de los puertos).
 
-Ya para probar en distintas laptops, se todos van a tener los mismos puertos.
+Ya para probar en distintas laptops, todos van a tener los mismos puertos.
