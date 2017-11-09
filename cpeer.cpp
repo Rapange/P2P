@@ -145,7 +145,7 @@ void CPeer::iniServerBot()
 
   std::thread(&CPeer::listenForClients,this,QuerySD,ACT_RCV_QUERY).detach();
   
-  
+  std::thread(&CPeer::listenForClients,this,KeepAliveSD,ACT_RCV_KEEP).detach();
 }
 
 void CPeer::listenForClients(int serverSD, char action)
@@ -163,6 +163,8 @@ void CPeer::listenForClients(int serverSD, char action)
     }
     if(action == ACT_RCV_QUERY)
       std::thread(&CPeer::opQueryS,this,ConnectFD).detach();
+	if(action == ACT_RCV_KEEP)
+	  std::thread(&CPeer::opKeep,this,ConnectFD).detach();
  }
 }
 
@@ -178,7 +180,8 @@ void CPeer::iniClientBot()
   /*std::thread(&CPeer::opRead,this,DownloadSD).detach();
     std::thread(&CPeer::opWrite,this,DownloadSD).detach();*/
 
-  int KeepAliveSD = createClientSocket(m_keepAlive_port,"127.0.1.1");
+  int KeepAliveSD = createClientSocket(m_keepAlive_port,"127.0.0.1");
+  //std::thread(&CPeer::opKeep,this,KeepAliveSD).detach();
   /*std::thread(&CPeer::opRead,this,KeepAliveSD).detach();
   std::thread(&CPeer::opWrite,this,KeepAliveSD).detach();*/
 
@@ -308,14 +311,35 @@ void CPeer::opWriteDownload(int clientSD)
 
 }
 
+void CPeer::opKeep(int clientSD)
+{
+	opReadKeep(clientSD);
+	opWriteKeep(clientSD);
+}
+
 void CPeer::opReadKeep(int clientSD)
 {
-
+	char* buffer = new char[13];
+    read(clientSD,buffer,13);
+    cout<<buffer<<endl;
+	delete[] buffer;
 }
 
 void CPeer::opWriteKeep(int clientSD)
 {
-
+	char* buffer;
+	string protocol = "002";//intToStr(file_name.size(),FILE_NAME_SIZE);
+	protocol += "k";
+	protocol += "Ok";
+	
+	buffer = new char[protocol.size()];
+	protocol.copy(buffer,protocol.size(),0);
+	
+	cout<<"Envio keepalive: "<<protocol<<endl;
+	write(clientSD,buffer,protocol.size());
+	
+	delete[] buffer;
+	buffer = NULL;
 }
 
 void CPeer::opQueryS(int clientSD)
@@ -375,3 +399,4 @@ CPeer::~CPeer()
 {
     //dtor
 }
+
