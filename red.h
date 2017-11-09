@@ -14,6 +14,7 @@
 #include <string.h>
 #include <iostream>
 #include <unistd.h>
+#include <unordered_map>
 #include <chrono>
 using namespace std;
 #endif // RED_H_INCLUDED

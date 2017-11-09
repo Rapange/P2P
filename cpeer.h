@@ -5,11 +5,15 @@
 #define ACTION_SIZE 1
 #define FILE_NAME_SIZE 3
 #define CHUNK_LIST_SIZE 4
+#define CHUNK_SIZE 10
+#define CHUNK_NUM_SIZE 10
 #define IP_LIST_SIZE 3
 #define ACT_SND_JOIN 'J'
 #define ACT_RCV_JOIN 'j'
 #define ACT_SND_QUERY 'Q' //Receive query Action
 #define ACT_RCV_QUERY 'q' //Send query Action
+#define ACT_SND_DWLD 'D'
+#define ACT_RCV_DWLD 'd'
 
 class CPeer
 {
@@ -27,6 +31,7 @@ class CPeer
 
         std::vector< std::string > lstPeersIp;
 	std::map <std::string, std::vector<int> > m_num_chunks;
+	std::unordered_map <std::string, std::vector<string> > chunks;
         
         CPeer(int query_port, int download_port, int keepAlive_port);
         virtual ~CPeer();
@@ -51,8 +56,8 @@ class CPeer
 	void opQuery(int clientSD, string file_name);
 
 	void opReadDownload(int clientSD);
-        void opWriteDownload(int clientSD);
-	//void opDownload(int clientSD);
+        void opWriteDownload(int clientSD, string file_name, int num_chunk);
+	void opDownload(int clientSD, string file_name, int num_chunk);
 
 	void opReadKeep(int clientSD);
         void opWriteKeep(int clientSD);
@@ -61,6 +66,10 @@ class CPeer
 	void opQueryS(int clientSD);
 	string opReadQueryS(int clientSD);
 	void opWriteQueryS(int clientSD, string file_name);
+
+	void opDownloadS(int clientSD);
+	string opReadDownloadS(int clientSD);
+	void opWriteDownloadS(int clientSD, string file_name, string chunk);
 };
 
 #endif // CPEER_H

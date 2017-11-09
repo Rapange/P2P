@@ -144,7 +144,7 @@ void CPeer::iniServerBot()
   int KeepAliveSD = createServerSocket(m_keepAlive_port);
 
   std::thread(&CPeer::listenForClients,this,QuerySD,ACT_RCV_QUERY).detach();
-  
+  std::thread(&CPeer::listenForClients,this,DownloadSD,ACT_RCV_DWLD).detach();
   
 }
 
@@ -163,6 +163,8 @@ void CPeer::listenForClients(int serverSD, char action)
     }
     if(action == ACT_RCV_QUERY)
       std::thread(&CPeer::opQueryS,this,ConnectFD).detach();
+    if(action == ACT_RCV_DWLD)
+      std::thread(&CPeer::opDownloadS,this,ConnectFD).detach();
  }
 }
 
@@ -300,12 +302,59 @@ void CPeer::opQuery(int clientSD, string file_name)
 
 void CPeer::opReadDownload(int clientSD)
 {
+  char* buffer;
+  int size_file_name;
+  string my_chunk;
+  buffer = new char[FILE_NAME_SIZE + 1];
+
+  read(clientSD, buffer, FILE_NAME_SIZE);
+  buffer[FILE_NAME_SIZE] = '\0';
+
+  size_file_name = std::stoi(buffer);
+  delete[] buffer;
+  buffer = new char[ACTION_SIZE + 1];
+
+  read(clientSD, buffer, ACTION_SIZE);
+  buffer[ACTION_SIZE] = '\0';
+
+  delete[] buffer;
+  
+  buffer = new char[size_file_name + 1];
+  read(clientSD, buffer, size_file_name);
+
+  buffer[size_file_name] = '\0';
+
+  delete[] buffer;
+  buffer = new char[CHUNK_SIZE + 1];
+  read(clientSD, buffer, CHUNK_SIZE);
+
+  buffer[CHUNK_SIZE] = '\0';
+  my_chunk = buffer;
+
+  delete[] buffer;
+  buffer = NULL;
+
+  cout<<my_chunk<<endl;
+}
+
+void CPeer::opWriteDownload(int clientSD, string file_name, int num_chunk)
+{
+  string protocol;
+  char* buffer;
+  protocol = intToStr(file_name.size(), FILE_NAME_SIZE);
+  protocol += ACT_SND_DWLD;
+  protocol += file_name;
+  protocol += intToStr(num_chunk,CHUNK_NUM_SIZE);
+  buffer = new char[protocol.size()];
+
+  write(clientSD, buffer, protocol.size());
 
 }
 
-void CPeer::opWriteDownload(int clientSD)
+void CPeer::opDownload(int clientSD, string file_name, int num_chunk)
 {
-
+  opWriteDownload(clientSD, file_name, num_chunk);
+  opReadDownload(clientSD);
 }
 
 void CPeer::opReadKeep(int clientSD)
@@ -369,6 +418,51 @@ void CPeer::opWriteQueryS(int clientSD, string file_name){
   buffer = new char[protocol.size()];
   protocol.copy(buffer,protocol.size(),0);
   write(clientSD,buffer,protocol.size());
+}
+
+void CPeer::opDownloadS(int clientSD)
+{
+  while(true){
+  opReadDownloadS(clientSD);
+  opWriteDownloadS(clientSD, "hola", "001");
+  }
+}
+
+string CPeer::opReadDownloadS(int clientSD)
+{
+  char* buffer;
+  int my_chunk_num;
+  buffer = new char[FILE_NAME_SIZE+1];
+  read(clientSD, buffer, FILE_NAME_SIZE);
+
+  buffer[FILE_NAME_SIZE] = '\0';
+
+  delete[] buffer;
+  buffer = new char[ACTION_SIZE+1];
+  read(clientSD, buffer, ACTION_SIZE);
+
+  buffer[ACTION_SIZE] = '\0';
+  delete[] buffer;
+
+  buffer = new char[CHUNK_NUM_SIZE + 1];
+  read(clientSD, buffer, CHUNK_NUM_SIZE);
+  buffer[CHUNK_NUM_SIZE] = '\0';
+  my_chunk_num = std::stoi(buffer);
+  
+}
+
+void CPeer::opWriteDownloadS(int clientSD, string file_name, string chunk)
+{
+  
+  string protocol;
+  char* buffer;
+  protocol = intToStr(file_name.size(), FILE_NAME_SIZE);
+  protocol += ACT_RCV_DWLD;
+  protocol += file_name;
+  protocol += chunk;
+
+  buffer = new char[protocol.size()];
+  write(clientSD, buffer, protocol.size());
 }
 
 CPeer::~CPeer()
