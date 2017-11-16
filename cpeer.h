@@ -14,9 +14,13 @@
 #define ACT_RCV_JOIN 'j'
 #define ACT_SND_QUERY 'Q' //Receive query Action
 #define ACT_RCV_QUERY 'q' //Send query Action
+#define ACT_SND_KEEP 'K'
+#define ACT_RCV_KEEP 'k'
+
 #define ACT_SND_DWLD 'D'
 #define ACT_RCV_DWLD 'd'
 #define TRASH '`'
+
 
 class CPeer
 {
