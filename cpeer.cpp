@@ -108,14 +108,16 @@ std::vector<unsigned int> CPeer::deformatChunks(std::string num_of_chunks)
 std::vector<unsigned int> CPeer::askForChunks(std::vector<std::vector<unsigned int> > &chunks_per_peer, std::vector<std::string> &available_chunks)
 {
   std::vector<unsigned int> petition_for_peers(chunks_per_peer.size(),0);
+  bool chunks_taken[MAX_NUM_CHUNK] = {0}; 
   bool is_useful = false;
   unsigned int chunk_to_ask;
   for(unsigned int i = 0; i < chunks_per_peer.size(); i++){
     is_useful = false;
     for(unsigned int j = 0; j < chunks_per_peer[i].size(); j++){
-      if(available_chunks[chunks_per_peer[i][j]] == ""){
+      chunk_to_ask = chunks_per_peer[i][j];
+      if(available_chunks[chunk_to_ask] == "" && !chunks_taken[chunk_to_ask]){
 	is_useful = true;
-	chunk_to_ask = chunks_per_peer[i][j];
+	chunks_taken[chunk_to_ask] = true;
 	cout<<"I ask for: "<<chunk_to_ask<<endl;
 	break;
       }
@@ -354,7 +356,8 @@ void CPeer::iniClientBot(std::string file_name)
     for(unsigned int i = 0; i < download_sockets.size(); i++){
       if(chunks_to_ask_for[i] != 0){
 	received_chunk = opReadDownload(download_sockets[i]);
-	chunks[file_name][chunks_to_ask_for[i]] = received_chunk;
+	if(received_chunk.size() == CHUNK_SIZE)
+	  chunks[file_name][chunks_to_ask_for[i]] = received_chunk;
       }
     }
 
@@ -599,12 +602,12 @@ string CPeer::opReadQueryS(int clientSD){
   ip = inet_ntoa(client_addr.sin_addr);
   cout<<"your IP is: "<<ip<<endl;
 
-  /*if(!isInIp(ip)){
+  if(!isInIp(ip)){
     cout<<"open query"<<endl;
     lstPeersIp.push_back(ip);
     query_sockets.push_back(createClientSocket(40000,ip));
     download_sockets.push_back(createClientSocket(40001,ip));
-  }*/
+  }
   
   int size_file_name;
   buffer = new char[FILE_NAME_SIZE + 1];
