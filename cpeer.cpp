@@ -7,7 +7,7 @@ CPeer::CPeer(int query_port, int download_port, int keepAlive_port, string file_
   m_download_port = download_port;
   m_keepAlive_port = keepAlive_port;
   final_chunk = std::string(CHUNK_SIZE,TRASH);
-  cout<<final_chunk<<endl;
+  //cout<<final_chunk<<endl;
   if(file_name != "-1"){
     chunks[file_name] = empty_chunks; //Fill with real chunks
     uploadFile(file_name);
@@ -27,7 +27,7 @@ bool CPeer::finished(std::string file_name)
 {
 
   for(unsigned int i = 1; i < chunks[file_name].size(); i++){
-    cout<<chunks[file_name][i]<<" ";
+    //cout<<chunks[file_name][i]<<" ";
     if(chunks[file_name][i] == final_chunk){
       return true;
     }
@@ -118,7 +118,7 @@ std::vector<unsigned int> CPeer::askForChunks(std::vector<std::vector<unsigned i
       if(available_chunks[chunk_to_ask] == "" && !chunks_taken[chunk_to_ask]){
 	is_useful = true;
 	chunks_taken[chunk_to_ask] = true;
-	cout<<"I ask for: "<<chunk_to_ask<<endl;
+	//cout<<"I ask for: "<<chunk_to_ask<<endl;
 	break;
       }
     }
@@ -139,19 +139,19 @@ void CPeer::uploadFile(std::string file_name)
     file.read(buffer,CHUNK_SIZE);
     buffer[CHUNK_SIZE] = '\0';
     chunks[file_name][i] = buffer;
-    cout<<i<<" "<<buffer<<endl;
+    //cout<<i<<" "<<buffer<<endl;
     i++;
     bzero(buffer, CHUNK_SIZE+1);
   }while(file.gcount() == CHUNK_SIZE);
   chunks[file_name][i-1] = std::string(CHUNK_SIZE - chunks[file_name][i-1].size(), TRASH) + chunks[file_name][i-1];
 
-  cout<<chunks[file_name][i-1]<<endl;
+  //cout<<chunks[file_name][i-1]<<endl;
   
   chunks[file_name][i] = final_chunk;
   file.close();
 
-  cout<<"File uploaded"<<endl;
-  cout<<chunks[file_name].size()<<endl;
+  //cout<<"File uploaded"<<endl;
+  //cout<<chunks[file_name].size()<<endl;
 }
 
 int CPeer::createServerSocket(int portNumber)
@@ -289,7 +289,7 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
   int dummy;
   //std::thread(&CPeer::opJoin,this,JoinSD).detach();
   opJoin(JoinSD);
-  cout<<lstPeersIp.size()<<endl;
+  //cout<<lstPeersIp.size()<<endl;
   
   int KeepAliveSD = createClientSocket(m_keepAlive_port,Ip_tracker);
   //std::thread(&CPeer::opKeep,this,KeepAliveSD).detach();
@@ -317,12 +317,12 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
     download_sockets.push_back(DownloadSD);
   }
 
-  cout<<"before"<<endl;
+  //cout<<"before"<<endl;
   while(!finished(file_name)){
-    //cout<<"h"<<endl;
-    cout<<"I have the following chunks: "<<endl;
+    ////cout<<"h"<<endl;
+    //cout<<"I have the following chunks: "<<endl;
     for(unsigned int i = 1; i < 7; i++){
-      cout<<i<<" "<<chunks[file_name][i]<<endl;
+      //cout<<i<<" "<<chunks[file_name][i]<<endl;
     }
     available_chunks.clear();
     chunks_to_ask_for.clear();
@@ -335,14 +335,14 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
 	available_chunks.push_back(opReadQuery(query_sockets[i],file_name));
       }
 
-    cout<<"finish available chunks"<<endl;
+    //cout<<"finish available chunks"<<endl;
     for(unsigned int i = 0; i < available_chunks.size(); i++){
       for(unsigned int j = 0; j < available_chunks[i].size(); j++){
-	cout<<available_chunks[i][j]<<" ";
+	//cout<<available_chunks[i][j]<<" ";
       }
-      cout<<endl;
+      //cout<<endl;
     }
-    cout<<endl;
+    //cout<<endl;
     //cin>>dummy;
 
     chunks_to_ask_for = askForChunks(available_chunks,chunks[file_name]);
@@ -350,11 +350,11 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
 
 
 
-    cout<<"finished chunks to ask for "<<endl;
+    //cout<<"finished chunks to ask for "<<endl;
     for(unsigned int i = 0; i < chunks_to_ask_for.size(); i++){
-      cout<<chunks_to_ask_for[i]<<" ";
+      //cout<<chunks_to_ask_for[i]<<" ";
     }
-    cout<<endl;
+    //cout<<endl;
     //cin>>dummy;
 
     for(unsigned int i = 0; i < download_sockets.size(); i++){
@@ -375,7 +375,7 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
   }
   
 
-  ofstream file("holaout", std::ios::binary);
+  ofstream file(file_name, std::ios::binary);
   std::string my_chunk;
   char buffer[CHUNK_SIZE+1];
   for(unsigned int i = 1; i < chunks[file_name].size(); i++){
@@ -426,7 +426,7 @@ void CPeer::opReadJoin(int clientSD){
     
     buffer[ip_list_size] = '\0';
 
-    cout<<"IPs leidas del tracker: "<<buffer<<endl;
+    //cout<<"IPs leidas del tracker: "<<buffer<<endl;
     fillIPs(buffer);
  
   }
@@ -444,7 +444,7 @@ void CPeer::opWriteJoin(int clientSD){
 }
 
 void CPeer::opJoin(int clientSD){
-  cout<<"inijoin"<<endl;
+  //cout<<"inijoin"<<endl;
   opWriteJoin(clientSD);
   opReadJoin(clientSD);
   
@@ -461,7 +461,7 @@ std::vector<unsigned int> CPeer::opReadQuery(int clientSD, string file_name)
   buffer[CHUNK_LIST_SIZE] = '\0';
 
   size_chunk_list = stoi(buffer);
-  cout<<"Cliente lee tamanho de lista de chunks del servidor: "<<size_chunk_list<<endl;
+  //cout<<"Cliente lee tamanho de lista de chunks del servidor: "<<size_chunk_list<<endl;
   
   delete[] buffer;
   buffer = new char[ACTION_SIZE];
@@ -475,7 +475,7 @@ std::vector<unsigned int> CPeer::opReadQuery(int clientSD, string file_name)
     buffer[size_chunk_list] = '\0';
 
     peer_num_chunks = deformatChunks(buffer);
-    cout<<"deformatted"<<endl;
+    //cout<<"deformatted"<<endl;
     delete[] buffer;
     buffer = new char[FILE_NAME_SIZE + 1];
     read(clientSD,buffer,FILE_NAME_SIZE);
@@ -488,7 +488,7 @@ std::vector<unsigned int> CPeer::opReadQuery(int clientSD, string file_name)
     read(clientSD,buffer,size_file_name);
 
     buffer[size_file_name] = '\0';
-    cout<<"El nombre del archivo que me ha enviado es: "<<buffer<<endl;
+    //cout<<"El nombre del archivo que me ha enviado es: "<<buffer<<endl;
   }
   
   
@@ -508,7 +508,7 @@ void CPeer::opWriteQuery(int clientSD, string file_name)
   buffer = new char[protocol.size()];
   protocol.copy(buffer,protocol.size(),0);
 
-  cout<<"Cliente envia: "<<protocol<<endl;
+  //cout<<"Cliente envia: "<<protocol<<endl;
   write(clientSD,buffer,protocol.size());
 
   delete[] buffer;
@@ -555,7 +555,7 @@ void CPeer::opQuery(int clientSD, string file_name)
   delete[] buffer;
   buffer = NULL;
 
-  cout<<my_chunk<<endl;
+  //cout<<my_chunk<<endl;
   return my_chunk;
 }
 
@@ -573,7 +573,7 @@ void CPeer::opWriteDownload(int clientSD, string file_name, int num_chunk)
 
   write(clientSD, buffer, protocol.size());
 
-  cout<<"protocolo de download "<<protocol<<endl;
+  //cout<<"protocolo de download "<<protocol<<endl;
   
 
 }
@@ -594,7 +594,7 @@ void CPeer::opReadKeep(int clientSD)
 {
 	char* buffer = new char[13];
     read(clientSD,buffer,13);
-    cout<<buffer<<endl;
+    //cout<<buffer<<endl;
 	delete[] buffer;
 }
 
@@ -608,7 +608,7 @@ void CPeer::opWriteKeep(int clientSD)
 	buffer = new char[protocol.size()];
 	protocol.copy(buffer,protocol.size(),0);
 	
-	cout<<"Envio keepalive: "<<protocol<<endl;
+	//cout<<"Envio keepalive: "<<protocol<<endl;
 	write(clientSD,buffer,protocol.size());
 	
 	delete[] buffer;
@@ -631,10 +631,10 @@ string CPeer::opReadQueryS(int clientSD){
   socklen_t addr_size = sizeof(struct sockaddr_in);
   int res = getpeername(clientSD, (struct sockaddr *) &client_addr, &addr_size);
   ip = inet_ntoa(client_addr.sin_addr);
-  cout<<"your IP is: "<<ip<<endl;
+  //cout<<"your IP is: "<<ip<<endl;
 
   if(!isInIp(ip)){
-    cout<<"open query"<<endl;
+    //cout<<"open query"<<endl;
     lstPeersIp.push_back(ip);
     query_sockets.push_back(createClientSocket(m_query_port,ip));
     download_sockets.push_back(createClientSocket(m_download_port,ip));
@@ -658,7 +658,7 @@ string CPeer::opReadQueryS(int clientSD){
 
     read(clientSD, buffer, size_file_name);
     buffer[size_file_name] = '\0';
-    cout<<"Servidor lee nombre del archivo: "<<buffer<<endl;
+    //cout<<"Servidor lee nombre del archivo: "<<buffer<<endl;
   }
 
   return buffer;
@@ -669,7 +669,7 @@ string CPeer::opReadQueryS(int clientSD){
 void CPeer::opWriteQueryS(int clientSD, string file_name){
   string protocol, formatted_chunks = formatChunks(file_name);
   char *buffer;
-  cout<<formatted_chunks<<endl;
+  //cout<<formatted_chunks<<endl;
   
   protocol = intToStr(formatted_chunks.size(),CHUNK_LIST_SIZE);
   protocol += ACT_RCV_QUERY;
@@ -677,7 +677,7 @@ void CPeer::opWriteQueryS(int clientSD, string file_name){
   protocol += intToStr(file_name.size(),FILE_NAME_SIZE);
   protocol += file_name;
 
-  cout<<"Enviando protocolo del servidor: "<<protocol<<endl;
+  //cout<<"Enviando protocolo del servidor: "<<protocol<<endl;
   buffer = new char[protocol.size()];
   protocol.copy(buffer,protocol.size(),0);
   write(clientSD,buffer,protocol.size());
@@ -698,16 +698,16 @@ unsigned int CPeer::opReadDownloadS(int clientSD, std::string &file_name)
   char* buffer;
   unsigned int my_chunk_num, size_file_name;
   buffer = new char[FILE_NAME_SIZE+1];
-  cout<<"Esperando lectura:"<<endl;
+  //cout<<"Esperando lectura:"<<endl;
   read(clientSD, buffer, FILE_NAME_SIZE);
 
-  cout<<"Ya lei"<<endl;
+  //cout<<"Ya lei"<<endl;
   buffer[FILE_NAME_SIZE] = '\0';
 
-  cout<<buffer<<endl;
+  //cout<<buffer<<endl;
   size_file_name = stoi(buffer);
 
-  cout<<"tam file_name desde server "<<size_file_name<<endl;
+  //cout<<"tam file_name desde server "<<size_file_name<<endl;
   
   delete[] buffer;
   buffer = new char[ACTION_SIZE+1];
@@ -728,7 +728,7 @@ unsigned int CPeer::opReadDownloadS(int clientSD, std::string &file_name)
   read(clientSD, buffer, CHUNK_NUM_SIZE);
   buffer[CHUNK_NUM_SIZE] = '\0';
   my_chunk_num = std::stoi(buffer);
-  cout<<"Extracted num chunk from server: "<<my_chunk_num<<endl;
+  //cout<<"Extracted num chunk from server: "<<my_chunk_num<<endl;
 
   delete[] buffer;
   buffer = NULL;
