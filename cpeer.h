@@ -56,7 +56,7 @@ class CPeer
         void iniServerBot();
 	void listenForClients(int serverSD, char action);
 	
-        void iniClientBot(std::string file_name);
+        void iniClientBot(std::string file_name, std::string Ip_tracker);
 	void iniProcess();
         int createClientSocket(int portNumber, string serverIP);
         int createServerSocket(int portNumber);

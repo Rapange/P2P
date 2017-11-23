@@ -5,7 +5,9 @@ using namespace std;
 int main()
 {
   int query_port, download_port, keepAlive_port;
-  string file_to_upload, file_to_download;
+  string file_to_upload, file_to_download, Ip_tracker;
+  cout<<"Ingrese IP del tracker";
+  cin>>Ip_tracker;
   cout<<"Ingrese puerto para Query: ";
   cin>>query_port;
   cout<<"Ingrese puerto para Download: ";
@@ -18,7 +20,7 @@ int main()
   cin>>file_to_download;
   CPeer *newPeer = new CPeer(query_port, download_port, keepAlive_port, file_to_upload);
     newPeer->iniServerBot();
-    newPeer->iniClientBot(file_to_download);
+    newPeer->iniClientBot(file_to_download, Ip_tracker);
     cout << "Hello world!" << endl;
     return 0;
 }

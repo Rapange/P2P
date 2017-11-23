@@ -280,18 +280,18 @@ void CPeer::listenForClients(int serverSD, char action)
  }
 }
 
-void CPeer::iniClientBot(std::string file_name)
+void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
 {
   std::vector<string> empty_chunks(MAX_NUM_CHUNK); //Solo si no sube archivo, inicializacion.
   
   
-  int JoinSD = createClientSocket(1100, "127.0.0.1");
+  int JoinSD = createClientSocket(1100, Ip_tracker);
   int dummy;
   //std::thread(&CPeer::opJoin,this,JoinSD).detach();
   opJoin(JoinSD);
   cout<<lstPeersIp.size()<<endl;
   
-  int KeepAliveSD = createClientSocket(m_keepAlive_port,"127.0.0.1");
+  int KeepAliveSD = createClientSocket(m_keepAlive_port,Ip_tracker);
   //std::thread(&CPeer::opKeep,this,KeepAliveSD).detach();
 
   if(chunks[file_name].empty()){
