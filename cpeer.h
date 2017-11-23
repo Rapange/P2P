@@ -6,10 +6,10 @@
 #define ACTION_SIZE 1
 #define FILE_NAME_SIZE 3
 #define CHUNK_LIST_SIZE 7
-#define CHUNK_SIZE 10
-#define CHUNK_NUM_SIZE 10
+#define CHUNK_SIZE 1000
+#define CHUNK_NUM_SIZE 1000
 #define IP_LIST_SIZE 3
-#define MAX_NUM_CHUNK 10000
+#define MAX_NUM_CHUNK 100000
 #define ACT_SND_JOIN 'J'
 #define ACT_RCV_JOIN 'j'
 #define ACT_SND_QUERY 'Q' //Receive query Action
