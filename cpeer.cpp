@@ -308,12 +308,12 @@ void CPeer::iniClientBot(std::string file_name)
   std::string received_chunk;
   for(unsigned int i = 0; i < lstPeersIp.size(); i++)
   {
-    QuerySD = createClientSocket(40000,lstPeersIp[i]);
+    QuerySD = createClientSocket(m_query_port,lstPeersIp[i]);
     query_sockets.push_back(QuerySD);
   }
 
   for(unsigned int i = 0; i < lstPeersIp.size(); i++){
-    DownloadSD = createClientSocket(40001,lstPeersIp[i]);
+    DownloadSD = createClientSocket(m_download_port,lstPeersIp[i]);
     download_sockets.push_back(DownloadSD);
   }
 
