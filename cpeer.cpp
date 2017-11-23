@@ -11,6 +11,7 @@ CPeer::CPeer(int query_port, int download_port, int keepAlive_port, string file_
   if(file_name != "-1"){
     chunks[file_name] = empty_chunks; //Fill with real chunks
     uploadFile(file_name);
+    cout<<"ARCHIVO SUBIDO!"<<endl;
   }
     //ctor
 }
