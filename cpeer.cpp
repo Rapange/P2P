@@ -636,8 +636,8 @@ string CPeer::opReadQueryS(int clientSD){
   if(!isInIp(ip)){
     cout<<"open query"<<endl;
     lstPeersIp.push_back(ip);
-    query_sockets.push_back(createClientSocket(40000,ip));
-    download_sockets.push_back(createClientSocket(40001,ip));
+    query_sockets.push_back(createClientSocket(m_query_port,ip));
+    download_sockets.push_back(createClientSocket(m_download_port,ip));
   }
   
   int size_file_name;
