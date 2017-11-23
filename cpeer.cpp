@@ -134,7 +134,7 @@ std::vector<unsigned int> CPeer::askForChunks(std::vector<std::vector<unsigned i
 void CPeer::uploadFile(std::string file_name)
 {
   char buffer[CHUNK_SIZE + 1];
-  ifstream file(file_name, std::ios::binary);
+  ifstream file(file_name, std::ios::binary | std::ios::in);
   unsigned int i = 1;
   do{
     file.read(buffer,CHUNK_SIZE);
@@ -376,7 +376,7 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
   }
   
 
-  ofstream file(file_name, std::ios::binary);
+  ofstream file(file_name, std::ios::binary | std::ios::out);
   std::string my_chunk;
   char buffer[CHUNK_SIZE+1];
   for(unsigned int i = 1; i < chunks[file_name].size(); i++){
