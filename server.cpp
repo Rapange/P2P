@@ -25,14 +25,20 @@ string leftPadding(string str, int total_tam){
 class Tracker{
   //string name;
   vector<string> IPs;
+  int m_keepal_port; 
 public:
   string convert();
   int IPsconectadas = 0;
   vector<string> temp;
+  Tracker(int keepal_port);
   void join(int c_socket, string IP);
   void keepalive();
   void QuitarElementos();
 };
+
+Tracker::Tracker(int keepal_port){
+  m_keepal_port = keepal_port;
+}
 
 string Tracker::convert(){
   string ip_list;
@@ -142,7 +148,7 @@ void Tracker::keepalive()
 			    memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
 			 
 			    stSockAddr.sin_family = AF_INET;
-			    stSockAddr.sin_port = htons(40002);
+			    stSockAddr.sin_port = htons(m_keepal_port);
 			    Res = inet_pton(AF_INET, (*it).c_str(), &stSockAddr.sin_addr);
 			 	printf("Connecting IP %s ... \n",(*it).c_str());
 			    if (0 > Res)
@@ -203,8 +209,11 @@ void Tracker::keepalive()
 
   int main(void)
   {
-  
-    Tracker tracker;
+
+    int keepal_port;
+    cout<<"Ingrese puerto de keeps";
+    cin>>keepal_port;
+    Tracker tracker(keepal_port);
     struct sockaddr_in stSockAddr, client_addr, *pV4Addr;
     struct in_addr ipAddr;
     int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
