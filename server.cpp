@@ -170,8 +170,9 @@ void Tracker::keepalive()
 				  //auto itr = std::find(IPs.begin(),IPs.end(),"127.0.0.1");
 				  //IPs.erase(itr);
 				  //QuitarElemento("127.0.0.1");
-				  temp.push_back("127.0.0.1");
-				  quitar = true;
+				  //temp.push_back("127.0.0.1");
+			      temp.push_back(*it);
+			      quitar = true;
 			      //close(SocketFD);
 			      //exit(EXIT_FAILURE);
 			    }
@@ -188,6 +189,12 @@ void Tracker::keepalive()
 
 				  	cout<<"Envio keepalive: "<<protocol<<endl;
 				  	write(SocketFD,buffer,protocol.size());
+					delete[] buffer;
+					
+					buffer = new char[6 + 1];
+					read(SocketFD,buffer,6);
+					buffer[6] = '\0';
+
 
 				  	delete[] buffer;
 				  	buffer = NULL;
@@ -265,7 +272,7 @@ void Tracker::keepalive()
       
       std::thread(&Tracker::join,&tracker,ConnectFD,str).detach();
 	  
-	  std::thread(&Tracker::keepalive,&tracker).detach();
+      std::thread(&Tracker::keepalive,&tracker).detach();
       //cout<<str<<endl;
      bzero(buffer,256);
      

@@ -1,4 +1,5 @@
 #include "cpeer.h"
+#include "base64.cpp"
 
 CPeer::CPeer(int query_port, int download_port, int keepAlive_port, string file_name)
 {
@@ -6,7 +7,7 @@ CPeer::CPeer(int query_port, int download_port, int keepAlive_port, string file_
   m_query_port = query_port;
   m_download_port = download_port;
   m_keepAlive_port = keepAlive_port;
-  final_chunk = std::string(CHUNK_SIZE,TRASH);
+  final_chunk = std::string(BASE64_SIZE,TRASH);
   //cout<<final_chunk<<endl;
   if(file_name != "-1"){
     chunks[file_name] = empty_chunks; //Fill with real chunks
@@ -133,23 +134,27 @@ std::vector<unsigned int> CPeer::askForChunks(std::vector<std::vector<unsigned i
 
 void CPeer::uploadFile(std::string file_name)
 {
-  char buffer[CHUNK_SIZE + 1];
-  ifstream file(file_name, ifstream::binary);
+  FILE* file;
+  file = fopen(file_name.c_str(),"rb+");
+  unsigned char buffer[CHUNK_SIZE + 1];
+  int bytes_read;
+  //ifstream file(file_name, ifstream::binary);
   unsigned int i = 1;
   do{
-    file.read(buffer,CHUNK_SIZE);
+    bytes_read = fread(buffer,1,CHUNK_SIZE,file);
     buffer[CHUNK_SIZE] = '\0';
-    chunks[file_name][i] = buffer;
-    cout<<i<<" "<<buffer<<endl;
+    chunks[file_name][i] = base64_encode(buffer,bytes_read);
+    cout<<chunks[file_name][i].size()<<endl;
+    cout<<i<<" "<<buffer<<" "<<endl;
     i++;
     bzero(buffer, CHUNK_SIZE+1);
-  }while(file.gcount() == CHUNK_SIZE);
-  chunks[file_name][i-1] = std::string(CHUNK_SIZE - chunks[file_name][i-1].size(), TRASH) + chunks[file_name][i-1];
+  }while(bytes_read == CHUNK_SIZE);
+  chunks[file_name][i-1] = std::string(BASE64_SIZE - chunks[file_name][i-1].size(), TRASH) + chunks[file_name][i-1];
 
   //cout<<chunks[file_name][i-1]<<endl;
   
   chunks[file_name][i] = final_chunk;
-  file.close();
+  fclose(file);
 
   //cout<<"File uploaded"<<endl;
   //cout<<chunks[file_name].size()<<endl;
@@ -309,20 +314,20 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
   std::string received_chunk;
   for(unsigned int i = 0; i < lstPeersIp.size(); i++)
   {
-    QuerySD = createClientSocket(m_query_port,lstPeersIp[i]);
+    QuerySD = createClientSocket(m_query_port/*40000*/,lstPeersIp[i]);
     query_sockets.push_back(QuerySD);
   }
 
   for(unsigned int i = 0; i < lstPeersIp.size(); i++){
-    DownloadSD = createClientSocket(m_download_port,lstPeersIp[i]);
+    DownloadSD = createClientSocket(m_download_port/*40001*/,lstPeersIp[i]);
     download_sockets.push_back(DownloadSD);
   }
 
   //cout<<"before"<<endl;
   while(!finished(file_name)){
-    ////cout<<"h"<<endl;
-    //cout<<"I have the following chunks: "<<endl;
-    for(unsigned int i = 1; i < 7; i++){
+    //cout<<"h"<<endl;
+    cout<<"I have the following chunks: "<<endl;
+    for(unsigned int i = 1; i < 10; i++){
       //cout<<i<<" "<<chunks[file_name][i]<<endl;
     }
     available_chunks.clear();
@@ -353,7 +358,7 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
 
     //cout<<"finished chunks to ask for "<<endl;
     for(unsigned int i = 0; i < chunks_to_ask_for.size(); i++){
-      //cout<<chunks_to_ask_for[i]<<" ";
+      cout<<i<<" "<<chunks_to_ask_for[i]<<endl;
     }
     //cout<<endl;
     //cin>>dummy;
@@ -367,7 +372,7 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
     for(unsigned int i = 0; i < download_sockets.size(); i++){
       if(chunks_to_ask_for[i] != 0){
 	received_chunk = opReadDownload(download_sockets[i]);
-	if(received_chunk.size() == CHUNK_SIZE)
+	if(received_chunk.size() == BASE64_SIZE)
 	  chunks[file_name][chunks_to_ask_for[i]] = received_chunk;
       }
     }
@@ -375,8 +380,10 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
 
   }
   
-
-  ofstream file(file_name, ofstream::binary);
+  cout<<"Comenzando a copiar"<<endl;
+  
+  FILE* file;
+  file = fopen(file_name.c_str(),"wb+");
   std::string my_chunk;
   char buffer[CHUNK_SIZE+1];
   for(unsigned int i = 1; i < chunks[file_name].size(); i++){
@@ -385,12 +392,15 @@ void CPeer::iniClientBot(std::string file_name, std::string Ip_tracker)
     if(my_chunk[0] == TRASH){
       while(my_chunk[0] == TRASH) my_chunk.erase(0,1);
     }
+    my_chunk = base64_decode(my_chunk);
     my_chunk.copy(buffer,my_chunk.size(),0);
     buffer[my_chunk.size()] = '\0';
+    //cout<<i<<" "<<buffer<<endl;
     
-    file.write(buffer, my_chunk.size());
+    fwrite(buffer, 1, my_chunk.size(), file);
+    bzero(buffer,CHUNK_SIZE+1);
   }
-  file.close();
+  fclose(file);
 
 
 
@@ -547,10 +557,10 @@ void CPeer::opQuery(int clientSD, string file_name)
   buffer[size_file_name] = '\0';
 
   delete[] buffer;
-  buffer = new char[CHUNK_SIZE + 1];
-  read(clientSD, buffer, CHUNK_SIZE);
+  buffer = new char[BASE64_SIZE + 1];
+  read(clientSD, buffer, BASE64_SIZE);
 
-  buffer[CHUNK_SIZE] = '\0';
+  buffer[BASE64_SIZE] = '\0';
   my_chunk = buffer;
 
   delete[] buffer;
@@ -634,12 +644,12 @@ string CPeer::opReadQueryS(int clientSD){
   ip = inet_ntoa(client_addr.sin_addr);
   //cout<<"your IP is: "<<ip<<endl;
 
-  if(!isInIp(ip)){
+  /*if(!isInIp(ip)){
     //cout<<"open query"<<endl;
     lstPeersIp.push_back(ip);
     query_sockets.push_back(createClientSocket(m_query_port,ip));
     download_sockets.push_back(createClientSocket(m_download_port,ip));
-  }
+  }*/
   
   int size_file_name;
   buffer = new char[FILE_NAME_SIZE + 1];
@@ -745,6 +755,8 @@ void CPeer::opWriteDownloadS(int clientSD, string file_name, string chunk)
   protocol += ACT_RCV_DWLD;
   protocol += file_name;
   protocol += chunk;
+
+  cout<<"te envio: "<<chunk<<endl;
 
   buffer = new char[protocol.size()];
   protocol.copy(buffer,protocol.size(),0);
