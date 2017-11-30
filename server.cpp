@@ -94,7 +94,7 @@ void Tracker::QuitarElementos()
 		eliminar = false;
 		for ( std::vector<string>::iterator it2=temp.begin(); it2!=temp.end(); it2++)
 		{
-			if((*it) == (*it));
+			if((*it2) == (*it));
 			{
 				eliminar = true;
 				IPsconectadas--;
