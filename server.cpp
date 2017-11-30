@@ -1,4 +1,4 @@
-  /* Server code in C */
+\  /* Server code in C */
  
   #include <sys/types.h>
   #include <sys/socket.h>
@@ -35,7 +35,6 @@ public:
   Tracker(int keepal_port);
   void join(int c_socket, string IP);
   void keepalive();
-  void QuitarElementos();
   int createSocket(int portNumber, string serverIP);
 };
 
@@ -131,99 +130,9 @@ void Tracker::join(int c_socket, string IP){
       close(c_socket);
 }
 
-void Tracker::QuitarElementos()
-{
-	vector<string> tmp;
-	bool eliminar = false;
-	//IPsconectadas = 0;
-	for ( std::vector<string>::iterator it=IPs.begin(); it!=IPs.end(); it++)
-	{
-		eliminar = false;
-		for ( std::vector<string>::iterator it2=temp.begin(); it2!=temp.end(); it2++)
-		{
-			if((*it2) == (*it));
-			{
-				eliminar = true;
-				IPsconectadas--;
-			}
-		}
-		if(!eliminar)
-			tmp.push_back(*it);
-		//cout<< "asdsadsd"<<endl;
-		//cout<< *it<<endl;
-	//	if(*it != str)
-	//	{
-	//		//cout<< "asdsd"<<endl;
-	//		temp.push_back((*it).c_str());
-	//		IPsconectadas++;
-	//	}
-	}
-	IPs.clear();
-	for ( std::vector<string>::iterator it=tmp.begin(); it!=tmp.end(); it++)
-	{
-		IPs.push_back(*it);
-	}
-	temp.clear();
-	//if(IPsconectadas > 0)
-	//{
-		
-	//}
-	//else
-	//	cout<<"ggg"<<IPsconectadas<<endl;
-}
-
 void Tracker::keepalive()
 {
-  /*for (std::vector<string>::iterator it=IPs.begin(); it!=IPs.end(); ++it)
-	{
-	  struct timeval timeout;
-	  timeout.tv_sec = 3;
-	  timeout.tv_usec = 0;
-	  struct sockaddr_in stSockAddr;
-	  int Res;
-          int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-	  int n;
-	  if (-1 == SocketFD)
-	  {
-	     perror("cannot create socket");
-	     exit(EXIT_FAILURE);
-	   }
-			 
-	  memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
-			 
-	  stSockAddr.sin_family = AF_INET;
-	  stSockAddr.sin_port = htons(m_keepal_port);
-	  Res = inet_pton(AF_INET, (*it).c_str(), &stSockAddr.sin_addr);
-	  printf("Connecting IP %s ... \n",(*it).c_str());
-	   if (0 > Res)
-	   {
-	     perror("error: first parameter is not a valid address family");
-	     close(SocketFD);
-	     exit(EXIT_FAILURE);
-	   }
-	   else if (0 == Res)
-	   {
-	    perror("char string second parameter does not contain valid ipaddress");
-	     close(SocketFD);
-	     exit(EXIT_FAILURE);
-	    }
-
-	   int ll = connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
-	   cout<<ll<<endl;
-	   if (-1 == ll)
-	   {
-	     printf("IP not connected \n");
-	     
-	   }
-	   else
-	   {
-					//printf("IP connected \n");
-	     setsockopt(SocketFD,SOL_SOCKET,SO_RCVTIMEO, (const char *)&timeout,sizeof(timeval));
-	     setsockopt(SocketFD,SOL_SOCKET,SO_SNDTIMEO, (const char *)&timeout,sizeof(timeval));
-	     sockets.push_back(SocketFD);	
-	   }
-	}*/
-	int my_socket;
+ 	int my_socket;
 	ssize_t nn;
 	while(1)
 	{
