@@ -24,6 +24,7 @@ string leftPadding(string str, int total_tam){
 
 class Tracker{
   //string name;
+public:
   vector<string> IPs;
   vector<int> sockets;
   int m_keepal_port; 
@@ -35,6 +36,7 @@ public:
   void join(int c_socket, string IP);
   void keepalive();
   void QuitarElementos();
+  int createSocket(int portNumber, string serverIP);
 };
 
 Tracker::Tracker(int keepal_port){
@@ -51,6 +53,50 @@ string Tracker::convert(){
     ip_list += IPs[i];
   }
   return ip_list;
+}
+
+int Tracker::createSocket(int portNumber, string serverIP){
+  struct sockaddr_in stSockAddr;
+  int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+  int n, Res;
+
+  struct timeval timeout;
+	  timeout.tv_sec = 3;
+	  timeout.tv_usec = 0;
+  if (-1 == SocketFD)
+  {
+    perror("cannot create socket");
+    exit(EXIT_FAILURE);
+  }
+
+  memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
+  stSockAddr.sin_family = AF_INET;
+  stSockAddr.sin_port = htons(portNumber);
+
+  Res = inet_pton(AF_INET, serverIP.data(), &stSockAddr.sin_addr);
+
+  if (0 > Res)
+  {
+    perror("error: first parameter is not a valid address family");
+    close(SocketFD);
+    exit(EXIT_FAILURE);
+  }
+  else if (0 == Res)
+  {
+    perror("char string (second parameter does not contain valid ipaddress");
+    close(SocketFD);
+    exit(EXIT_FAILURE);
+  }
+
+  if (-1 == connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in)))
+  {
+    perror("connect failed");
+    close(SocketFD);
+    exit(EXIT_FAILURE);
+  }
+  setsockopt(SocketFD,SOL_SOCKET,SO_RCVTIMEO, (const char *)&timeout,sizeof(timeval));
+  setsockopt(SocketFD,SOL_SOCKET,SO_SNDTIMEO, (const char *)&timeout,sizeof(timeval));
+  return SocketFD;
 }
 
 void Tracker::join(int c_socket, string IP){
@@ -128,7 +174,7 @@ void Tracker::QuitarElementos()
 
 void Tracker::keepalive()
 {
-	for (std::vector<string>::iterator it=IPs.begin(); it!=IPs.end(); ++it)
+  /*for (std::vector<string>::iterator it=IPs.begin(); it!=IPs.end(); ++it)
 	{
 	  struct timeval timeout;
 	  timeout.tv_sec = 3;
@@ -172,12 +218,13 @@ void Tracker::keepalive()
 	   else
 	   {
 					//printf("IP connected \n");
-	     setsockopt(SocketFD,SOL_SOCKET,SO_RCVTIMEO, (char *)&timeout,sizeof(timeout));
-	     setsockopt(SocketFD,SOL_SOCKET,SO_SNDTIMEO, (char *)&timeout,sizeof(timeout));
+	     setsockopt(SocketFD,SOL_SOCKET,SO_RCVTIMEO, (const char *)&timeout,sizeof(timeval));
+	     setsockopt(SocketFD,SOL_SOCKET,SO_SNDTIMEO, (const char *)&timeout,sizeof(timeval));
 	     sockets.push_back(SocketFD);	
 	   }
-	}
+	}*/
 	int my_socket;
+	ssize_t nn;
 	while(1)
 	{
 	  
@@ -196,7 +243,8 @@ void Tracker::keepalive()
 	    delete[] buffer;
 					
 	    buffer = new char[6 + 1];
-	    if(read(my_socket,buffer,6) == 6){
+	    nn = read(my_socket,buffer,6);
+	    if(nn == 6){
 	      buffer[6] = '\0';
 
 
@@ -205,6 +253,7 @@ void Tracker::keepalive()
 	      cout<<"IP:" <<IPs[i]<<" conectada"<<endl;
 	    }
 	    else{
+	      cout<<"IP: "<<IPs[i]<<" desconectada"<<endl;
 	      sockets.erase(sockets.begin()+i);
 	      IPs.erase(IPs.begin()+i);
 	    }
@@ -273,7 +322,9 @@ void Tracker::keepalive()
       inet_ntop(AF_INET, &ipAddr, str, INET_ADDRSTRLEN);
       
       std::thread(&Tracker::join,&tracker,ConnectFD,str).detach();
-	  
+
+      int my_socket = tracker.createSocket(keepal_port,str);
+      tracker.sockets.push_back(my_socket);
       std::thread(&Tracker::keepalive,&tracker).detach();
       //cout<<str<<endl;
      bzero(buffer,256);
