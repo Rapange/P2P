@@ -597,8 +597,10 @@ void CPeer::opDownload(int clientSD, string file_name, int num_chunk)
 
 void CPeer::opKeep(int clientSD)
 {
+  while(1){
 	opReadKeep(clientSD);
 	opWriteKeep(clientSD);
+  }
 }
 
 void CPeer::opReadKeep(int clientSD)

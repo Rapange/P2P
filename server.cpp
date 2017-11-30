@@ -25,6 +25,7 @@ string leftPadding(string str, int total_tam){
 class Tracker{
   //string name;
   vector<string> IPs;
+  vector<int> sockets;
   int m_keepal_port; 
 public:
   string convert();
@@ -127,87 +128,88 @@ void Tracker::QuitarElementos()
 
 void Tracker::keepalive()
 {
-	bool quitar = false;
+	for (std::vector<string>::iterator it=IPs.begin(); it!=IPs.end(); ++it)
+	{
+	  struct timeval timeout;
+	  timeout.tv_sec = 3;
+	  timeout.tv_usec = 0;
+	  struct sockaddr_in stSockAddr;
+	  int Res;
+          int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	  int n;
+	  if (-1 == SocketFD)
+	  {
+	     perror("cannot create socket");
+	     exit(EXIT_FAILURE);
+	   }
+			 
+	  memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
+			 
+	  stSockAddr.sin_family = AF_INET;
+	  stSockAddr.sin_port = htons(m_keepal_port);
+	  Res = inet_pton(AF_INET, (*it).c_str(), &stSockAddr.sin_addr);
+	  printf("Connecting IP %s ... \n",(*it).c_str());
+	   if (0 > Res)
+	   {
+	     perror("error: first parameter is not a valid address family");
+	     close(SocketFD);
+	     exit(EXIT_FAILURE);
+	   }
+	   else if (0 == Res)
+	   {
+	    perror("char string second parameter does not contain valid ipaddress");
+	     close(SocketFD);
+	     exit(EXIT_FAILURE);
+	    }
+
+	   int ll = connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
+	   cout<<ll<<endl;
+	   if (-1 == ll)
+	   {
+	     printf("IP not connected \n");
+	     
+	   }
+	   else
+	   {
+					//printf("IP connected \n");
+	     setsockopt(SocketFD,SOL_SOCKET,SO_RCVTIMEO, (char *)&timeout,sizeof(timeout));
+	     setsockopt(SocketFD,SOL_SOCKET,SO_SNDTIMEO, (char *)&timeout,sizeof(timeout));
+	     sockets.push_back(SocketFD);	
+	   }
+	}
+	int my_socket;
 	while(1)
 	{
-		quitar = false;
-		if(IPsconectadas > 0)
-		{
-			for ( std::vector<string>::iterator it=IPs.begin(); it!=IPs.end(); ++it)
-			{
-				struct sockaddr_in stSockAddr;
-			    int Res;
-			    int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-			    int n;
-			  	if (-1 == SocketFD)
-			    {
-			      perror("cannot create socket");
-			      exit(EXIT_FAILURE);
-			    }
-			 
-			    memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
-			 
-			    stSockAddr.sin_family = AF_INET;
-			    stSockAddr.sin_port = htons(m_keepal_port);
-			    Res = inet_pton(AF_INET, (*it).c_str(), &stSockAddr.sin_addr);
-			 	printf("Connecting IP %s ... \n",(*it).c_str());
-			    if (0 > Res)
-			    {
-			      perror("error: first parameter is not a valid address family");
-			      close(SocketFD);
-			      exit(EXIT_FAILURE);
-			    }
-			    else if (0 == Res)
-			    {
-			      perror("char string second parameter does not contain valid ipaddress");
-			      close(SocketFD);
-			      exit(EXIT_FAILURE);
-			    }
-			 
-			    if (-1 == connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in)))
-			    {
-			      printf("IP not connected \n");
-				  //auto itr = std::find(IPs.begin(),IPs.end(),"127.0.0.1");
-				  //IPs.erase(itr);
-				  //QuitarElemento("127.0.0.1");
-				  //temp.push_back("127.0.0.1");
-			      temp.push_back(*it);
-			      quitar = true;
-			      //close(SocketFD);
-			      //exit(EXIT_FAILURE);
-			    }
-			   	else
-				{
-					//printf("IP connected \n");
-					char* buffer;
-					string protocol = "009";//intToStr(file_name.size(),FILE_NAME_SIZE);
-				 	protocol += "K";
-				  	protocol += "keepalive";
+	  
+	  for(unsigned int i = 0; i < sockets.size(); i++){
+	    my_socket = sockets[i];
+	    char* buffer;
+	    string protocol = "009";//intToStr(file_name.size(),FILE_NAME_SIZE);
+	    protocol += "K";
+	    protocol += "keepalive";
 
-				  	buffer = new char[protocol.size()];
-				  	protocol.copy(buffer,protocol.size(),0);
+	    buffer = new char[protocol.size()];
+	    protocol.copy(buffer,protocol.size(),0);
 
-				  	cout<<"Envio keepalive: "<<protocol<<endl;
-				  	write(SocketFD,buffer,protocol.size());
-					delete[] buffer;
+	    cout<<"Envio keepalive: "<<protocol<<endl;
+	    write(my_socket,buffer,protocol.size());
+	    delete[] buffer;
 					
-					buffer = new char[6 + 1];
-					read(SocketFD,buffer,6);
-					buffer[6] = '\0';
+	    buffer = new char[6 + 1];
+	    if(read(my_socket,buffer,6) == 6){
+	      buffer[6] = '\0';
 
 
-				  	delete[] buffer;
-				  	buffer = NULL;
-				}
-			}
-		}
-		else
-		cout<<"There aren't connections"<<endl;
-		if(quitar)
-		{
-			QuitarElementos();
-		}
-		sleep(10);
+	      delete[] buffer;
+	      buffer = NULL;
+	      cout<<"IP:" <<IPs[i]<<" conectada"<<endl;
+	    }
+	    else{
+	      sockets.erase(sockets.begin()+i);
+	      IPs.erase(IPs.begin()+i);
+	    }
+	  }
+	  sleep(10);
 	}
 }
 
