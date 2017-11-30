@@ -1,4 +1,4 @@
-\  /* Server code in C */
+  /* Server code in C */
  
   #include <sys/types.h>
   #include <sys/socket.h>
